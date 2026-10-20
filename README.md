@@ -2,7 +2,7 @@
 
 ![The Steam Deck wizard's welcome screen](docs/screenshots/1_welcome.jpg)
 
-The Steam Deck companion to [Shu's LaunchBox 4K CRT Build](https://github.com/shu2600/launchbox-4k-crt-build).
+The Steam Deck companion to [Shu's LaunchBox 4K CRT Build](https://github.com/shu2600/shus-launchbox-4k-crt-build).
 It runs on your Windows PC and sends your LaunchBox library to EmuDeck on your Steam Deck over your home network, with
 every system on the light version of the same period TV, monitor or handheld look your PC build uses.
 
@@ -45,6 +45,6 @@ every system on the light version of the same period TV, monitor or handheld loo
 ## Legal
 
 Same as the PC build: you supply the games and BIOS, every third-party pack comes from its creator, and nothing of
-theirs is redistributed here. Credits are in the PC build's [CREDITS.md](https://github.com/shu2600/launchbox-4k-crt-build/blob/main/CREDITS.md).
+theirs is redistributed here. Credits are in the PC build's [CREDITS.md](https://github.com/shu2600/shus-launchbox-4k-crt-build/blob/main/CREDITS.md).
 
 Built by Shu and Anima · [shuhq.com](https://shuhq.com)
