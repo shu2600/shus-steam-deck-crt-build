@@ -1,0 +1,6 @@
+# your own paths
+tools/lb_settings.json
+tools/deck_sync_list.json
+__pycache__/
+*.pyc
+*.bak*
