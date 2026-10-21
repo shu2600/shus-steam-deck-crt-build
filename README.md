@@ -47,4 +47,4 @@ every system on the light version of the same period TV, monitor or handheld loo
 Same as the PC build: you supply the games and BIOS, every third-party pack comes from its creator, and nothing of
 theirs is redistributed here. Credits are in the PC build's [CREDITS.md](https://github.com/shu2600/shus-launchbox-4k-crt-build/blob/main/CREDITS.md).
 
-Built by Shu and Anima · [shuhq.com](https://shuhq.com) · [Support Me On Patreon](https://www.patreon.com/cw/Shu2600)
+Built by Shu and Anima · [shuhq.com](https://shuhq.com) · [Support Me On Patreon](https://www.patreon.com/cw/Shu2600) · [Buy Me a Coffee](https://buymeacoffee.com/Shu2600)
