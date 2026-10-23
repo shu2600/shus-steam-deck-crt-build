@@ -43,7 +43,10 @@ def images(plat, kind):
 titles = {}   # ApplicationPath (lower) -> (platform, title)
 for xml in glob.glob(os.path.join(C.LB, "Data", "Platforms", "*.xml")):
     for g in ET.parse(xml).getroot().findall("Game"):
-        titles[(g.findtext("ApplicationPath") or "").lower()] = (g.findtext("Platform"), g.findtext("Title"))
+        p = g.findtext("ApplicationPath") or ""
+        if p and not os.path.isabs(p):                  # LaunchBox can store paths relative to itself
+            p = os.path.normpath(os.path.join(C.LB, p))
+        titles[p.lower()] = (g.findtext("Platform"), g.findtext("Title"))
 
 synced = json.load(open(os.path.join(_here, "deck_sync_list.json"), encoding="utf-8"))
 plan, size = [], 0
@@ -53,7 +56,7 @@ for e in synced:
         continue
     plat, title = t
     system, rom = e["dst"].split("/", 1)
-    stem = os.path.splitext(os.path.basename(rom))[0]
+    stem = os.path.splitext(rom)[0]     # keeps any subfolder: ES-DE mirrors the roms folder layout for media
     for kind, folder in TYPES.items():
         src = images(plat, kind).get(safe(title).lower())
         if src:
@@ -74,4 +77,5 @@ with tarfile.open(fileobj=proc.stdin, mode="w|") as tf:
         if i % 5000 == 0:
             print(f"  {i}/{len(todo)}", flush=True)
 proc.stdin.close(); proc.wait()
-print("done, exit", proc.returncode)
+print("done" if proc.returncode == 0 else f"the Deck stopped taking files (exit {proc.returncode})")
+sys.exit(proc.returncode)

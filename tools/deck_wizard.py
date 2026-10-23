@@ -14,7 +14,8 @@ ASSETS = next((d for d in (os.path.join(os.path.dirname(HERE), "assets"),
               os.path.join(os.path.dirname(HERE), "assets"))
 PY = sys.executable
 NAME = "Shu's Steam Deck CRT Build"
-TITLE = NAME + " - Setup"
+VERSION = "1.1"   # bump on every change and add a line to CHANGELOG.md
+TITLE = NAME + " - Setup  (v" + VERSION + ")"
 BG, PANEL, FG, MUTED, ACCENT, OK, BAD = "#14161a", "#1d2026", "#e9e6df", "#9a9a94", "#d9a441", "#7fbf6a", "#d0675b"
 MODES = {"all": "All games", "playlists": "Playlist games only", "none": "Don't copy"}
 NET_STEPS = ("1. Put the Deck on the same network as this PC\n"
@@ -356,12 +357,20 @@ class Wizard(tk.Tk):
         opts = self.s.get("_deck_opts", {"looks": True, "art": True, "faves": True})
         modes = self.s.get("_deck_modes")
 
+        def done():
+            self.after(0, lambda: (self.start.state(["!disabled"]), self.cancel_btn.state(["disabled"])) if self.start.winfo_exists() else None)
+
         def work():
             _D, P = fresh_modules()
             self.log("== Working out what to send")
-            g, l = P.library()
-            items = P.build(modes or P.default_modes(g), g, l); P.save(items)
+            try:
+                g, l = P.library()
+                items = P.build(modes or P.default_modes(g), g, l); P.save(items)
+            except Exception as e:
+                self.log(f"   Couldn't read your LaunchBox library: {e}\n\nStopped. Nothing was sent."); done(); return
             self.log(f"   {len(items)} files, {sum(i['size'] for i in items) / 1e9:.1f} GB")
+            for note in getattr(P, "NOTES", []):
+                self.log("   " + note)
             steps = [("Copy the games", ["deck_copy.py"])]
             if opts.get("looks"):
                 steps.append(("TV and monitor looks", ["deck_looks.py"]))
@@ -369,13 +378,29 @@ class Wizard(tk.Tk):
                 steps.append(("Artwork for ES-DE", ["deck_media.py"]))
             if opts.get("faves"):
                 steps.append(("Steam favourites", ["deck_faves.py"]))
+            failed = []
             for n, (label, cmd) in enumerate(steps, 1):
                 if self.cancelled:
                     break
                 self.log(f"\n== {n}/{len(steps)}  {label}")
-                self.call(cmd)
-            self.log("\nCancelled. Run it again to carry on." if self.cancelled else "\nAll done. On the Deck, open ES-DE or your Steam library.")
-            self.after(0, lambda: (self.start.state(["!disabled"]), self.cancel_btn.state(["disabled"])) if self.start.winfo_exists() else None)
+                try:
+                    rc = self.call(cmd)
+                except Exception as e:
+                    self.log(f"   couldn't start {cmd[0]}: {e}"); rc = -1
+                if self.cancelled:
+                    break
+                if rc != 0:
+                    failed.append(label); self.log(f"   ** {label} went wrong (exit {rc}). See the lines above.")
+                    if cmd[0] == "deck_copy.py":    # the rest needs the games on the Deck
+                        self.log("   Stopping here: the other steps need the games copied first."); break
+            if self.cancelled:
+                self.log("\nCancelled. Run it again to carry on.")
+            elif failed:
+                self.log(f"\nFinished with {len(failed)} problem(s): {', '.join(failed)}. Fix what's above and run it again; "
+                         "anything already on the Deck is skipped.")
+            else:
+                self.log("\nAll done. On the Deck, open ES-DE or your Steam library.")
+            done()
         threading.Thread(target=work, daemon=True).start()
 
     # ---- 7 done ------------------------------------------------------------------------------------------------

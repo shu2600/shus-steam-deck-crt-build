@@ -2,9 +2,8 @@
 - finds each favourite's ROM on the Deck (same file name as on the PC, under the EmuDeck roms folders)
 - builds a launch command per system (flatpak RetroArch + the right core, or Dolphin / PPSSPP)
 - copies box front, logo and screenshot from LaunchBox into Steam's grid folder
-- rewrites shortcuts.vdf: keeps PC launchers + ES-DE, hides the EmuDeck emulator launchers, drops shortcuts whose
-  RetroArch core path is broken ('-L /x_libretro.so'), adds the favourites. Steam is shut down while it writes;
-  the old file is kept as shortcuts.vdf.bak_<time>.
+- updates shortcuts.vdf: swaps the favourites this build added last time for this time's, and leaves every other
+  shortcut alone. Steam is shut down while it writes; the old file is kept as shortcuts.vdf.bak_<time>.
 Usage: py -I deck_faves.py [--dry]"""
 import os, sys, re, json, glob, zlib, subprocess, tempfile, shutil
 import xml.etree.ElementTree as ET
@@ -78,8 +77,15 @@ FINDER = ("import json,os,sys,re\nq=json.load(sys.stdin);out={}\n"
           " if hit: out[i]=sorted(hit,key=len)[0]\n"
           "print(json.dumps(out))\n")
 query = {str(i): (f"{ROMS}/{FOLDER[p]}", b, t) for i, (p, t, b) in enumerate(favs)}   # names go as data, never through a shell
-ssh("cat > /tmp/deckfaves_find.py", FINDER.encode())
-res = ssh("python3 /tmp/deckfaves_find.py", json.dumps(query).encode())
+def must(r, what):
+    """Stop with an error (so the wizard reports it) if a step on the Deck failed."""
+    if r.returncode != 0:
+        sys.exit(f"{what} failed on the Deck (exit {r.returncode}): {r.stderr.decode('utf-8', 'replace').strip()[-400:]}")
+    return r
+
+
+must(ssh("cat > /tmp/deckfaves_find.py", FINDER.encode()), "Sending the game finder")
+res = must(ssh("python3 /tmp/deckfaves_find.py", json.dumps(query).encode()), "Finding your favourites")
 where = {int(k): v for k, v in json.loads(res.stdout.decode("utf-8") or "{}").items()}
 
 SHORT = {"Sinclair ZX Spectrum": "Spectrum", "SNK Neo Geo Pocket Color": "NGPC", "Arcade": "Arcade", "Atari 2600": "2600",
@@ -120,10 +126,14 @@ if DRY:
 # 3. send art + plan, then rewrite shortcuts.vdf on the Deck (Steam shut down meanwhile)
 tar = os.path.join(tempfile.gettempdir(), "deckfaves_art.tar")
 subprocess.run(["tar", "-cf", tar.replace("\\", "/"), "-C", stage.replace("\\", "/"), "."], check=True)
-ssh("rm -rf /tmp/deckfaves && mkdir -p /tmp/deckfaves")
+must(ssh("rm -rf /tmp/deckfaves && mkdir -p /tmp/deckfaves"), "Making a work folder")
 r = subprocess.run(["scp"] + D.ssh_args()[1:-1] + [tar, f"{D.host()}:/tmp/deckfaves/art.tar"], capture_output=True)
-print("art sent" if r.returncode == 0 else f"scp failed: {r.stderr.decode()[:200]}")
-ssh("cat > /tmp/deckfaves/plan.json", json.dumps(entries).encode())
-ssh("cat > /tmp/deckfaves/apply.py", open(os.path.join(_here, "deck_shortcuts_apply.py"), "rb").read())
+if r.returncode != 0:
+    sys.exit(f"Sending the box art failed: {r.stderr.decode('utf-8', 'replace')[:300]}")
+print("art sent")
+must(ssh("cat > /tmp/deckfaves/plan.json", json.dumps(entries).encode()), "Sending the favourites list")
+must(ssh("cat > /tmp/deckfaves/apply.py", open(os.path.join(_here, "deck_shortcuts_apply.py"), "rb").read()), "Sending the shortcut writer")
 res = ssh("python3 /tmp/deckfaves/apply.py /tmp/deckfaves/plan.json /tmp/deckfaves/art.tar")
 print(res.stdout.decode("utf-8", "replace"), res.stderr.decode("utf-8", "replace")[-800:])
+if res.returncode != 0 or b"shortcuts-done" not in res.stdout:
+    sys.exit("Writing the Steam shortcuts failed on the Deck. Your old shortcuts file is kept as shortcuts.vdf.bak_<time>.")

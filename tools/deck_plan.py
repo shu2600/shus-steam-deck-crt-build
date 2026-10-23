@@ -2,7 +2,7 @@
 Per system: "all" (every game), "playlists" (only games in your LaunchBox playlists) or "none".
 Writes deck_sync_list.json: [{"src": PC path, "dst": "<emudeck folder>/<file>", "size": bytes, "plat": platform}]
 Usage: py -I deck_plan.py            (defaults: cartridge systems whole, disc systems playlists only)"""
-import glob, json, os, sys
+import glob, json, os, re, sys
 import xml.etree.ElementTree as ET
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -46,28 +46,77 @@ def default_modes(games):
     return {p: ("all" if p in D.CARTS else "playlists") for p in plats}
 
 
+NOTES = []   # what build() did about clashing file names, for the wizard's log
+
+
+def _safe(name):
+    return re.sub(r'[\\/:*?"<>|]', "_", name).strip(" .") or "other"
+
+
 def build(modes, games=None, listed=None):
+    """Two different games can share a file name (two ROM sets, two folders). Nothing is ever dropped quietly:
+    - same name and same size = the same file twice: sent once
+    - same name, different file: the whole game (an m3u and its discs together) goes into a subfolder named after
+      its PC folder, file names unchanged so m3u lists still work; ES-DE shows it as a folder
+    - arcade: MAME needs the exact set name, so the first copy of each set is used and the rest are listed"""
     if games is None:
         games, listed = library()
-    items = []
-    for gid, (plat, path, title) in games.items():
+    del NOTES[:]
+    taken = {}          # dst lower -> (src, size)
+    items, dupes, moved, arcade_clash = [], 0, [], []
+
+    def free(dsts):
+        return all(d.lower() not in taken for d in dsts)
+
+    for gid, (plat, path, title) in sorted(games.items(), key=lambda kv: (kv[1][0] or "", kv[1][1] or "")):
         mode = modes.get(plat, "none")
         if plat not in D.FOLDER or not path or mode == "none" or (mode == "playlists" and gid not in listed):
             continue
-        for p in files_for(path):
-            if os.path.isfile(p):
-                items.append({"src": p, "dst": D.FOLDER[plat] + "/" + os.path.basename(p), "size": os.path.getsize(p), "plat": plat})
+        group = [(p, os.path.getsize(p)) for p in files_for(path) if os.path.isfile(p)]
+        if not group:
+            continue
+        folder = D.FOLDER[plat]
+        dsts = [folder + "/" + os.path.basename(p) for p, _s in group]
+        clash = [(d, s, p) for d, (p, s) in zip(dsts, group) if d.lower() in taken and taken[d.lower()][0].lower() != p.lower()]
+        same = [d for d, (p, s) in zip(dsts, group) if d.lower() in taken and taken[d.lower()][0].lower() == p.lower()]
+        if len(same) == len(group):
+            continue                                                     # this exact game is already planned
+        if clash:
+            if all(taken[d.lower()][1] == s for d, s, _p in clash) and len(clash) + len(same) == len(group):
+                dupes += 1; continue                                     # identical copy in another folder
+            if plat == "Arcade":
+                arcade_clash.append(os.path.basename(path)); continue
+            sub = _safe(os.path.basename(os.path.dirname(path)))
+            n, base = 1, sub
+            while True:
+                dsts = [f"{folder}/{sub}/{os.path.basename(p)}" for p, _s in group]
+                if free(dsts):
+                    break
+                n += 1; sub = f"{base} {n}"
+            moved.append(f"{title} -> {folder}/{sub}/")
+        for d, (p, s) in zip(dsts, group):
+            if d.lower() not in taken:
+                taken[d.lower()] = (p, s)
+                items.append({"src": p, "dst": d, "size": s, "plat": plat})
     arcade_dirs = {os.path.dirname(it["src"]) for it in items if it["plat"] == "Arcade"}
     for b in ARCADE_BIOS:                                                # BIOS sets the arcade games need, from the same folders
-        for d in arcade_dirs:
+        if ("arcade/" + b + ".zip") in taken:
+            continue
+        for d in sorted(arcade_dirs):
             p = os.path.join(d, b + ".zip")
             if os.path.isfile(p):
                 items.append({"src": p, "dst": "arcade/" + b + ".zip", "size": os.path.getsize(p), "plat": "Arcade"}); break
-    seen, uniq = set(), []
-    for it in items:
-        if it["dst"].lower() not in seen:
-            seen.add(it["dst"].lower()); uniq.append(it)
-    return uniq
+    if dupes:
+        NOTES.append(f"{dupes} game(s) are in your library twice as the same file: sent once.")
+    if moved:
+        NOTES.append(f"{len(moved)} game(s) share a file name with a different game, so they go in their own subfolder:")
+        NOTES.extend("  " + m for m in moved[:50])
+        if len(moved) > 50:
+            NOTES.append(f"  ...and {len(moved) - 50} more")
+    if arcade_clash:
+        NOTES.append(f"{len(arcade_clash)} arcade set(s) are in two of your ROM folders with different files; the first one found is "
+                     "sent: " + ", ".join(sorted(set(arcade_clash))[:30]))
+    return items
 
 
 def summary(items):
@@ -101,3 +150,4 @@ if __name__ == "__main__":
     for plat, (n, s) in sorted(summary(items).items(), key=lambda x: -x[1][1]):
         print(f"{s / 1e9:8.2f} GB  {n:5d}  {plat}")
     print(f"TOTAL {sum(i['size'] for i in items) / 1e9:.1f} GB, {len(items)} files")
+    print("\n".join(NOTES))

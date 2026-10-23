@@ -2,11 +2,11 @@
 
 ![The Steam Deck wizard's welcome screen](docs/screenshots/1_welcome.jpg)
 
-The Steam Deck companion to [Shu's LaunchBox 4K CRT Build](https://github.com/shu2600/shus-launchbox-4k-crt-build).
-It runs on your Windows PC and sends your LaunchBox library to EmuDeck on your Steam Deck over your home network, with
-every system on the light version of the same period TV, monitor or handheld look your PC build uses.
+Once my collection looked right on the big TV I wanted the same in my hands, so this is the Steam Deck side of [Shu's LaunchBox 4K CRT Build](https://github.com/shu2600/shus-launchbox-4k-crt-build). You run it on your Windows PC and it sends your LaunchBox games over your home network to EmuDeck on the Deck, every system on a lighter version of the same old TV, monitor or handheld look it gets on the PC.
 
 **No games, BIOS or firmware are included, downloaded or linked. You bring your own.** See [DISCLAIMER.md](DISCLAIMER.md).
+
+**Version 1.1** (23 October 2026). What's changed: [CHANGELOG.md](CHANGELOG.md)
 
 ## Before you start
 
@@ -40,7 +40,12 @@ every system on the light version of the same period TV, monitor or handheld loo
 - Each system gets the Standard version of its PC look, as the core preset and the content-folder preset EmuDeck uses.
   Old presets are kept as `.bak_emudeck`.
 - LaunchBox covers, 3D boxes, logos and screenshots go into ES-DE's media folder.
-- Your LaunchBox favourites become Steam shortcuts with box art; the old shortcuts file is kept as a backup.
+- Your LaunchBox favourites become Steam shortcuts with box art. It only changes the shortcuts it made itself, and the old shortcuts file is kept as a backup.
+- Two different games with the same file name each get sent; the second goes in its own folder.
+
+## How it's made
+
+I built this with Anima, my own AI setup. It's a hive mind of AI agents that all share one brain, a memory I've been building for months. Anima writes and tests the code with me and can call a council of other AIs (ChatGPT, Gemini, Grok, DeepSeek and more) to pick holes in it, ChatGPT's review is where the v1.1 fixes came from. I steer it, check what it does and run it on my own Deck first... there's a lot more Anima can do, more on that soon.
 
 ## Legal
 
