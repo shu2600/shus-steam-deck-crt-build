@@ -1,5 +1,9 @@
 # What's Changed
 
+## 1.1.1 (23 October 2026)
+
+- Added a line about me to the README, I'm an old school web developer and coder and this is how I build now.
+
 ## 1.1 (23 October 2026)
 
 - The wizard owns up now if a step goes wrong, it used to say "All done" even when the copy had failed. If the games don't copy it stops there, cos the rest needs them.

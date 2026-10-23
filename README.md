@@ -6,7 +6,7 @@ Once my collection looked right on the big TV I wanted the same in my hands, so 
 
 **No games, BIOS or firmware are included, downloaded or linked. You bring your own.** See [DISCLAIMER.md](DISCLAIMER.md).
 
-**Version 1.1** (23 October 2026). What's changed: [CHANGELOG.md](CHANGELOG.md)
+**Version 1.1.1** (23 October 2026). What's changed: [CHANGELOG.md](CHANGELOG.md)
 
 ## Before you start
 
@@ -45,6 +45,8 @@ Once my collection looked right on the big TV I wanted the same in my hands, so 
 
 ## How it's made
 
+I'm an old school web developer and coder, and I love AI... this is me using it to build what I'd have built anyway, just a lot faster.
+
 I built this with Anima, my own AI setup. It's a hive mind of AI agents that all share one brain, a memory I've been building for months. Anima writes and tests the code with me and can call a council of other AIs (ChatGPT, Gemini, Grok, DeepSeek and more) to pick holes in it, ChatGPT's review is where the v1.1 fixes came from. I steer it, check what it does and run it on my own Deck first... there's a lot more Anima can do, more on that soon.
 
 ## Legal
@@ -52,4 +54,4 @@ I built this with Anima, my own AI setup. It's a hive mind of AI agents that all
 Same as the PC build: you supply the games and BIOS, every third-party pack comes from its creator, and nothing of
 theirs is redistributed here. Credits are in the PC build's [CREDITS.md](https://github.com/shu2600/shus-launchbox-4k-crt-build/blob/main/CREDITS.md).
 
-Built by Shu and Anima · [shuhq.com](https://shuhq.com) · [Support Me On Patreon](https://www.patreon.com/cw/Shu2600) · [Buy Me a Coffee](https://buymeacoffee.com/Shu2600)
+Built by Shu and Anima · [shuhq.com](https://shuhq.com) · [Support me on Patreon](https://www.patreon.com/cw/Shu2600) · [Buy me a coffee](https://buymeacoffee.com/Shu2600)

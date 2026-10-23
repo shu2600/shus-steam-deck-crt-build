@@ -14,7 +14,7 @@ ASSETS = next((d for d in (os.path.join(os.path.dirname(HERE), "assets"),
               os.path.join(os.path.dirname(HERE), "assets"))
 PY = sys.executable
 NAME = "Shu's Steam Deck CRT Build"
-VERSION = "1.1"   # bump on every change and add a line to CHANGELOG.md
+VERSION = "1.1.1"   # bump on every change and add a line to CHANGELOG.md
 TITLE = NAME + " - Setup  (v" + VERSION + ")"
 BG, PANEL, FG, MUTED, ACCENT, OK, BAD = "#14161a", "#1d2026", "#e9e6df", "#9a9a94", "#d9a441", "#7fbf6a", "#d0675b"
 MODES = {"all": "All games", "playlists": "Playlist games only", "none": "Don't copy"}
